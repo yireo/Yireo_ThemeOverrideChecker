@@ -5,6 +5,8 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="yireo_themeoverridechecker_check_override_command" xsi:type="object">Yireo\ThemeOverrideChecker\Console\Command\CheckOverrideCommand</item>
+                <item name="yireo_themeoverridechecker_show_override_command" xsi:type="object">Yireo\ThemeOverrideChecker\Console\Command\ShowOverrideCommand</item>
+                <item name="yireo_themeoverridechecker_diff_override_command" xsi:type="object">Yireo\ThemeOverrideChecker\Console\Command\DiffOverrideCommand</item>
             </argument>
         </arguments>
     </type>

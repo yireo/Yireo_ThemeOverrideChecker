@@ -2,7 +2,6 @@
 
 namespace Yireo\ThemeOverrideChecker\Console\Command;
 
-use Exception;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NotFoundException;
@@ -12,18 +11,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
-use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
 
-class CheckOverrideCommand extends Command
+class ShowOverrideCommand extends Command
 {
-    private Finder $finder;
     private ThemeFileResolver $themeFileResolver;
     private ThemeProvider $themeProvider;
     private FileComparison $fileComparison;
+    private SplFileInfoFactory $splFileInfoFactory;
     private State $appState;
 
     public function __construct(
@@ -31,6 +29,7 @@ class CheckOverrideCommand extends Command
         ThemeFileResolver $themeFileResolver,
         ThemeProvider $themeProvider,
         FileComparison $fileComparison,
+        SplFileInfoFactory $splFileInfoFactory,
         State $appState,
         string $name = null
     ) {
@@ -39,6 +38,7 @@ class CheckOverrideCommand extends Command
         $this->themeFileResolver = $themeFileResolver;
         $this->themeProvider = $themeProvider;
         $this->fileComparison = $fileComparison;
+        $this->splFileInfoFactory = $splFileInfoFactory;
         $this->appState = $appState;
     }
 
@@ -47,9 +47,10 @@ class CheckOverrideCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('yireo:theme-overrides:check')
-            ->setDescription('Check the overrides of a specified theme')
-            ->addArgument('theme', InputOption::VALUE_REQUIRED, 'Theme name');
+        $this->setName('yireo:theme-overrides:show')
+            ->setDescription('Show the overrides of a specified theme and specific file')
+            ->addArgument('theme', InputOption::VALUE_REQUIRED, 'Theme name')
+            ->addArgument('file', InputOption::VALUE_REQUIRED, 'Theme file');
     }
 
     /**
@@ -68,7 +69,13 @@ class CheckOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->appState->setAreaCode('frontend');
+        $fileName = $input->getArgument('file');
+        if (empty($fileName)) {
+            $output->writeln('<error>No file argument given</error>');
+
+            return Command::FAILURE;
+        }
+
         $theme = $this->themeProvider->getTheme($themeName);
 
         try {
@@ -79,68 +86,53 @@ class CheckOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        $output->writeln('Theme path found: '.$themePath);
         try {
             $parentTheme = $this->themeProvider->getParentThemeFromTheme($theme);
-            $output->writeln('Theme parent found: '.$parentTheme->getPath());
         } catch (NotFoundException $e) {
-            $output->writeln('<error>No theme parent found</error>');
-
-            return Command::FAILURE;
+            $parentTheme = false;
         }
+
+        $file = $this->splFileInfoFactory->create($themePath . '/' .$fileName, $themePath);
 
         $table = new Table($output);
         $table->setHeaders([
-            'Theme file',
-            'Parent theme file',
-            'Number of different lines',
+            'Check',
+            'Value',
         ]);
 
-        $themeFiles = $this->finder->in($themePath)->files();
-        foreach ($themeFiles as $themeFile) {
-            $parentThemeFile = null;
-            $lineDiff = 0;
-            $lineCountDiff = 0;
-            $percentage = 0;
+        $table->addRow([
+            'Theme name',
+            $themeName,
+        ]);
 
-            try {
-                $parentThemeFile = $this->themeFileResolver->resolveOriginalFile($themeFile, $theme);
-                $lineDiff = $this->fileComparison->getLineDifference($parentThemeFile, $themeFile);
-                $lineCountDiff = $this->fileComparison->getLineCountDifference($parentThemeFile, $themeFile);
-                $percentage = $this->fileComparison->getPercentageDifference($parentThemeFile, $themeFile);
-            } catch (ThemeFileResolveException $e) {
-            }
+        $table->addRow([
+            'Theme path',
+            $themePath,
+        ]);
 
-            $themeCell = $themeFile->getRelativePathname();
+        $table->addRow([
+            'Theme file name',
+            !empty($file->getRealPath()) ? $file->getRealPath() : 'n/a'
+        ]);
 
-            $parentCell = 'No parent file found';
-            if ($parentThemeFile !== null) {
-                $parentCell = $parentThemeFile->getRelativePathname();
-            }
+        $table->addRow([
+            'Parent theme name',
+            $parentTheme ? $parentTheme->getVendor() . '/' . $parentTheme->getName() : 'n/a'
+        ]);
 
-            if ($lineDiff < 1) {
-                $lineDiff = $lineCountDiff;
-            }
+        $table->addRow([
+            'Parent theme path',
+            $parentTheme ? $parentTheme->getPath() : 'n/a'
+        ]);
 
-            $diffCell = '<info>No differences</info>';
-            if ($lineDiff < 1 && $parentThemeFile !== null) {
-                $diffCell = '<comment>Possibly no override needed</comment>';
-            }
-
-            if ($lineDiff > 0) {
-                $diffCell = '<error>Found '.$lineDiff.' lines to be different</error>';
-                //$diffCell = '<error>Found '.$lineDiff.' lines ('.$percentage.'%) to be different</error>';
-            }
-
-            $table->addRow([
-                $themeCell,
-                $parentCell,
-                $diffCell,
-            ]);
-        }
+        $this->appState->setAreaCode('frontend');
+        $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
+        $table->addRow([
+            'Original file',
+            $parentFile,
+        ]);
 
         $table->render();
-
         return Command::SUCCESS;
     }
 }
