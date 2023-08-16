@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Yireo\ThemeOverrideChecker\Util;
 
 use DOMDocument;
-use Magento\Framework\App\State;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\View\Design\Theme\ThemePackage;
 use Magento\Framework\View\Design\Theme\ThemePackageList;
@@ -15,7 +14,7 @@ class ThemeProvider
     private ThemePackageList $themePackageList;
 
     public function __construct(
-        ThemePackageList $themePackageList,
+        ThemePackageList $themePackageList
     ) {
         $this->themePackageList = $themePackageList;
     }
