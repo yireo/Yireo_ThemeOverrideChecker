@@ -14,6 +14,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
+use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
@@ -25,6 +26,7 @@ class CheckOverrideCommand extends Command
     private ThemeProvider $themeProvider;
     private FileComparison $fileComparison;
     private State $appState;
+    private OverrideAdviser $overrideAdviser;
 
     public function __construct(
         Finder $finder,
@@ -32,6 +34,7 @@ class CheckOverrideCommand extends Command
         ThemeProvider $themeProvider,
         FileComparison $fileComparison,
         State $appState,
+        OverrideAdviser $overrideAdviser,
         string $name = null
     ) {
         parent::__construct($name);
@@ -40,6 +43,7 @@ class CheckOverrideCommand extends Command
         $this->themeProvider = $themeProvider;
         $this->fileComparison = $fileComparison;
         $this->appState = $appState;
+        $this->overrideAdviser = $overrideAdviser;
     }
 
     /**
@@ -58,6 +62,7 @@ class CheckOverrideCommand extends Command
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return void
+     * @throws LocalizedException
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -93,7 +98,7 @@ class CheckOverrideCommand extends Command
         $table->setHeaders([
             'Theme file',
             'Parent theme file',
-            'Number of different lines',
+            'Advice',
         ]);
 
         $themeFiles = $this->finder->in($themePath)->files();
@@ -101,13 +106,11 @@ class CheckOverrideCommand extends Command
             $parentThemeFile = null;
             $lineDiff = 0;
             $lineCountDiff = 0;
-            $percentage = 0;
 
             try {
                 $parentThemeFile = $this->themeFileResolver->resolveOriginalFile($themeFile, $theme);
-                $lineDiff = $this->fileComparison->getLineDifference($parentThemeFile, $themeFile);
-                $lineCountDiff = $this->fileComparison->getLineCountDifference($parentThemeFile, $themeFile);
-                $percentage = $this->fileComparison->getPercentageDifference($parentThemeFile, $themeFile);
+                $lineDiff = $this->fileComparison->getLineDifference($themeFile, $parentThemeFile);
+                $lineCountDiff = $this->fileComparison->getLineCountDifference($themeFile, $parentThemeFile);
             } catch (ThemeFileResolveException $e) {
             }
 
@@ -118,24 +121,17 @@ class CheckOverrideCommand extends Command
                 $parentCell = $parentThemeFile->getRelativePathname();
             }
 
-            if ($lineDiff < 1) {
-                $lineDiff = $lineCountDiff;
-            }
-
-            $diffCell = '<info>No differences</info>';
-            if ($lineDiff < 1 && $parentThemeFile !== null) {
-                $diffCell = '<comment>Possibly no override needed</comment>';
-            }
-
-            if ($lineDiff > 0) {
-                $diffCell = '<error>Found '.$lineDiff.' lines to be different</error>';
-                //$diffCell = '<error>Found '.$lineDiff.' lines ('.$percentage.'%) to be different</error>';
-            }
+            $adviceCell = $this->overrideAdviser->advise(
+                $themeFile,
+                $parentThemeFile,
+                $lineDiff,
+                $lineCountDiff
+            );
 
             $table->addRow([
                 $themeCell,
                 $parentCell,
-                $diffCell,
+                $adviceCell,
             ]);
         }
 

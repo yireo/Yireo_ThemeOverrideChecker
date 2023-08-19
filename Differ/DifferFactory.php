@@ -9,6 +9,7 @@ use SebastianBergmann\Diff\Output\StrictUnifiedDiffOutputBuilder;
 class DifferFactory
 {
     /**
+     * @param array $options
      * @return Differ
      */
     public function create(array $options = []): Differ
@@ -16,10 +17,8 @@ class DifferFactory
         $options = array_merge([
             'collapseRanges' => true,
             'commonLineThreshold' => 6,
-            'contextLines' => 3,
-            'fromFile' => '',
+            'contextLines' => 0,
             'fromFileDate' => null,
-            'toFile' => '',
             'toFileDate' => null,
         ], $options);
 

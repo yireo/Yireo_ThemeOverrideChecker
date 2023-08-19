@@ -1,10 +1,10 @@
 {
     "name": "yireo/magento2-theme-override-checker",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "N/A",
     "type": "magento2-module",
     "require": {
-        "sebastian/diff": "^4.0 || ^5.0",
+        "sebastian/diff": "^1.0 || ^2.0 || ^3.0 || ^4.0 || ^5.0",
         "symfony/finder": "^4.0 || ^5.0 || ^6.0",
         "magento/framework": "^101.0.1|^101.1|^102.0|^103.0",
         "ext-dom": "*"

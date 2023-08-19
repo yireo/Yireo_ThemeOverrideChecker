@@ -11,6 +11,7 @@ use SebastianBergmann\Diff\Differ;
 use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
 use SplFileObject;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -98,8 +99,22 @@ class DiffOverrideCommand extends Command
 
         $this->appState->setAreaCode('frontend');
         $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
-        $diff = $this->fileComparison->getDiff($parentFile, $file);
-        $output->writeln($diff);
+        $diff = $this->fileComparison->getDiff($file, $parentFile);
+
+        $diffLines = explode("\n", $diff);
+        foreach ($diffLines as $diffLine) {
+            if (preg_match('/^\+/', $diffLine)) {
+                $output->writeln('<info>'.$diffLine.'</info>');
+                continue;
+            }
+
+            if (preg_match('/^\-/', $diffLine)) {
+                $output->writeln('<comment>'.$diffLine.'</comment>');
+                continue;
+            }
+
+            $output->writeln($diffLine);
+        }
 
         return Command::SUCCESS;
     }

@@ -2,7 +2,7 @@
 
 Magento module to find all files of a given Magento theme (for example `Magento/luma`), compare the found files with the parent theme (and/or modules) and return whether there are differences or not.
 
-**Current status**: In development
+**Current status**: Beta, ready for trying out
 
 ## Installation
 ```bash
@@ -29,5 +29,17 @@ List a diff between the current version and the parent theme version:
 bin/magento yireo:theme-overrides:diff Magento/luma web/css/source/_theme.less
 ```
 
+## FAQ
+### How does htis
+AmpersandHQ developed an excellent tool [ampersand-magento2-upgrade-patch-helper
+](https://github.com/AmpersandHQ/ampersand-magento2-upgrade-patch-helper) to check the status of a current project. Part of this is that it also scans for override files in the theme. However, it does not report what overriding files actually means. For instance, is overriding an XML layout file good or bad? How many lines of overriding a JavaScript file classifies as a bad practice. Because the Yireo ThemeOverrideChecker analysis files per 
+
 ## Todo
 - Support for multiple parent themes
+- Make `contextLines` in DifferFactory configurable
+- Improve adviser
+  - An XML layout file with dozens of line differences is ok
+  - An XML override file is dangerous
+  - An PHTML / JS / CSS file with dozens of line differences is dangerous 
+  - Markdown and text files can be the same
+  - SVG files can be totally different

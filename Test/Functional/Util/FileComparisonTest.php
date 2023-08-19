@@ -35,19 +35,19 @@ class FileComparisonTest extends TestCase
         $fileComparison = $this->get(FileComparison::class);
         $this->assertEquals(
             $argument->lineDifference,
-            $fileComparison->getLineDifference($file1, $file2),
+            $fileComparison->getLineDifference($file2, $file1),
             "Unexpected line difference: \nFile 1:\n$argument->file1Contents\n\nFile 2:\n$argument->file2Contents"
         );
 
         $this->assertEquals(
             $argument->lineCountDifference,
-            $fileComparison->getLineCountDifference($file1, $file2),
+            $fileComparison->getLineCountDifference($file2, $file1),
             "Unexpected line count difference: \nFile 1:\n$argument->file1Contents\n\nFile 2:\n$argument->file2Contents"
         );
 
         $this->assertEquals(
             $argument->percentageDifference,
-            $fileComparison->getPercentageDifference($file1, $file2),
+            $fileComparison->getPercentageDifference($file2, $file1),
             "Unexpected percentage difference: \nFile 1:\n$argument->file1Contents\n\nFile 2:\n$argument->file2Contents"
         );
     }

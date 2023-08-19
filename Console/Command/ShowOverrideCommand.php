@@ -12,6 +12,8 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
+use Yireo\ThemeOverrideChecker\Util\FileInspectorFactory;
+use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
@@ -23,6 +25,8 @@ class ShowOverrideCommand extends Command
     private FileComparison $fileComparison;
     private SplFileInfoFactory $splFileInfoFactory;
     private State $appState;
+    private OverrideAdviser $overrideAdviser;
+    private FileInspectorFactory $fileInspectorFactory;
 
     public function __construct(
         Finder $finder,
@@ -31,6 +35,8 @@ class ShowOverrideCommand extends Command
         FileComparison $fileComparison,
         SplFileInfoFactory $splFileInfoFactory,
         State $appState,
+        OverrideAdviser $overrideAdviser,
+        FileInspectorFactory $fileInspectorFactory,
         string $name = null
     ) {
         parent::__construct($name);
@@ -40,6 +46,8 @@ class ShowOverrideCommand extends Command
         $this->fileComparison = $fileComparison;
         $this->splFileInfoFactory = $splFileInfoFactory;
         $this->appState = $appState;
+        $this->overrideAdviser = $overrideAdviser;
+        $this->fileInspectorFactory = $fileInspectorFactory;
     }
 
     /**
@@ -115,6 +123,12 @@ class ShowOverrideCommand extends Command
             !empty($file->getRealPath()) ? $file->getRealPath() : 'n/a'
         ]);
 
+        $themeFileInspector = $this->fileInspectorFactory->create(['file' => $file]);
+        $table->addRow([
+            'Theme file line count',
+            $themeFileInspector->getLineCount(),
+        ]);
+
         $table->addRow([
             'Parent theme name',
             $parentTheme ? $parentTheme->getVendor() . '/' . $parentTheme->getName() : 'n/a'
@@ -130,6 +144,30 @@ class ShowOverrideCommand extends Command
         $table->addRow([
             'Original file',
             $parentFile,
+        ]);
+
+        $parentThemeFileInspector = $this->fileInspectorFactory->create(['file' => $parentFile]);
+        $table->addRow([
+            'Original file line count',
+            $parentThemeFileInspector->getLineCount(),
+        ]);
+
+        $lineCountDifference = $this->fileComparison->getLineCountDifference($file, $parentFile);
+        $table->addRow([
+            'Total line count difference',
+            $lineCountDifference
+        ]);
+
+        $lineDifference = $this->fileComparison->getLineDifference($file, $parentFile);
+        $table->addRow([
+            'Lines found to be different',
+            $lineDifference
+        ]);
+
+        $advice = $this->overrideAdviser->advise($file, $parentFile, $lineDifference, $lineCountDifference);
+        $table->addRow([
+            'Advice',
+            $advice
         ]);
 
         $table->render();

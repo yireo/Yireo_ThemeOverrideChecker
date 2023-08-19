@@ -23,12 +23,16 @@ class FileComparison
     }
 
     /**
-     * @param SplFileInfo $originalFile
      * @param SplFileInfo $newFile
+     * @param SplFileInfo|null $originalFile
      * @return string
      */
-    public function getDiff(SplFileInfo $originalFile, SplFileInfo $newFile): string
+    public function getDiff(SplFileInfo $newFile, ?SplFileInfo $originalFile = null): string
     {
+        if ($originalFile === null) {
+            return '';
+        }
+
         $differBuilderOptions = ['fromFile' => $originalFile->getRealPath(), 'toFile' => $newFile->getRealPath()];
         $differ = $this->differFactory->create($differBuilderOptions);
 
@@ -39,12 +43,16 @@ class FileComparison
     }
 
     /**
-     * @param SplFileInfo $originalFile
      * @param SplFileInfo $newFile
+     * @param SplFileInfo|null $originalFile
      * @return int
      */
-    public function getLineDifference(SplFileInfo $originalFile, SplFileInfo $newFile): int
+    public function getLineDifference(SplFileInfo $newFile, ?SplFileInfo $originalFile = null): int
     {
+        if ($originalFile === null) {
+            return 0;
+        }
+
         $originalFileInspector = $this->getFileInspector($originalFile);
         $newFileInspector = $this->getFileInspector($newFile);
 
@@ -57,12 +65,16 @@ class FileComparison
     }
 
     /**
-     * @param SplFileInfo $originalFile
      * @param SplFileInfo $newFile
+     * @param SplFileInfo|null $originalFile
      * @return int
      */
-    public function getLineCountDifference(SplFileInfo $originalFile, SplFileInfo $newFile): int
+    public function getLineCountDifference(SplFileInfo $newFile, ?SplFileInfo $originalFile = null): int
     {
+        if ($originalFile === null) {
+            return 0;
+        }
+
         $originalFileInspector = $this->getFileInspector($originalFile);
         $newFileInspector = $this->getFileInspector($newFile);
 
@@ -70,16 +82,20 @@ class FileComparison
     }
 
     /**
-     * @param SplFileInfo $originalFile
      * @param SplFileInfo $newFile
+     * @param SplFileInfo|null $originalFile
      * @return int
      */
-    public function getPercentageDifference(SplFileInfo $originalFile, SplFileInfo $newFile): int
+    public function getPercentageDifference(SplFileInfo $newFile, ?SplFileInfo $originalFile = null): int
     {
+        if ($originalFile === null) {
+            return 100;
+        }
+
         $originalFileLineCount = $this->getFileInspector($originalFile)->getLineCount();
         $newFileLineCount = $this->getFileInspector($newFile)->getLineCount();
-        $lineDifference = $this->getLineDifference($originalFile, $newFile);
-        $lineCount = $this->getLineCountDifference($originalFile, $newFile);
+        $lineDifference = $this->getLineDifference($newFile, $originalFile);
+        $lineCount = $this->getLineCountDifference($newFile, $originalFile);
         if ($lineDifference < $lineCount) {
             $lineDifference = $lineCount;
         }
