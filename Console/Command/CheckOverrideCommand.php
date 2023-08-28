@@ -2,7 +2,6 @@
 
 namespace Yireo\ThemeOverrideChecker\Console\Command;
 
-use Exception;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NotFoundException;
@@ -15,7 +14,6 @@ use Symfony\Component\Finder\Finder;
 use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
-use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
 
