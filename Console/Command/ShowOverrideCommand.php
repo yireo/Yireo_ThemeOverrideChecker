@@ -10,7 +10,6 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\Finder;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\FileInspectorFactory;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
@@ -29,7 +28,6 @@ class ShowOverrideCommand extends Command
     private FileInspectorFactory $fileInspectorFactory;
 
     public function __construct(
-        Finder $finder,
         ThemeFileResolver $themeFileResolver,
         ThemeProvider $themeProvider,
         FileComparison $fileComparison,
@@ -40,7 +38,6 @@ class ShowOverrideCommand extends Command
         string $name = null
     ) {
         parent::__construct($name);
-        $this->finder = $finder;
         $this->themeFileResolver = $themeFileResolver;
         $this->themeProvider = $themeProvider;
         $this->fileComparison = $fileComparison;
