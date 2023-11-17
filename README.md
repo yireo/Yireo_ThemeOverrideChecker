@@ -30,9 +30,9 @@ bin/magento yireo:theme-overrides:diff Magento/luma web/css/source/_theme.less
 ```
 
 ## FAQ
-### How does htis
+### How does this work?
 AmpersandHQ developed an excellent tool [ampersand-magento2-upgrade-patch-helper
-](https://github.com/AmpersandHQ/ampersand-magento2-upgrade-patch-helper) to check the status of a current project. Part of this is that it also scans for override files in the theme. However, it does not report what overriding files actually means. For instance, is overriding an XML layout file good or bad? How many lines of overriding a JavaScript file classifies as a bad practice. Because the Yireo ThemeOverrideChecker analysis files per 
+](https://github.com/AmpersandHQ/ampersand-magento2-upgrade-patch-helper) to check the status of a current project. Part of this is that it also scans for override files in the theme. However, it does not report what overriding files actually means. For instance, is overriding an XML layout file good or bad? How many lines of overriding a JavaScript file classifies as a bad practice? 
 
 ## Todo
 - Support for multiple parent themes
