@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 8 May 2024
+### Fixed
+- Add a command option to filter on file extension #3 @akosglue
+
 ## [0.0.3] - 28 August 2023
 ### Fixed
 - Remove old imports and unused `$finder`
