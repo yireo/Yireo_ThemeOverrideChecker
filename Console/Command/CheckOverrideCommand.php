@@ -51,6 +51,7 @@ class CheckOverrideCommand extends Command
     {
         $this->setName('yireo:theme-overrides:check')
             ->setDescription('Check the overrides of a specified theme')
+            ->addOption('extension', '-e', InputOption::VALUE_OPTIONAL, 'Filter the checked files by extension (for example xml, phtml, ...)')
             ->addArgument('theme', InputOption::VALUE_REQUIRED, 'Theme name');
     }
 
@@ -100,6 +101,11 @@ class CheckOverrideCommand extends Command
         ]);
 
         $themeFiles = $this->finder->in($themePath)->files();
+
+        if($input->getOption('extension')) {
+            $themeFiles->name('*.' . $input->getOption('extension'));
+        }
+
         foreach ($themeFiles as $themeFile) {
             $parentThemeFile = null;
             $lineDiff = 0;
