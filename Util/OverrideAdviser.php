@@ -137,6 +137,6 @@ class OverrideAdviser
      */
     private function isViewXmlFile(SplFileInfo $file): bool
     {
-
+        return $file->getFilename() === 'view.xml';
     }
 }
