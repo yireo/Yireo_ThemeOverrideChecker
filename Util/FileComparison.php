@@ -3,22 +3,22 @@
 namespace Yireo\ThemeOverrideChecker\Util;
 
 use Symfony\Component\Finder\SplFileInfo;
-use Yireo\ThemeOverrideChecker\Differ\DifferFactory;
+use Yireo\ThemeOverrideChecker\Differ\DifferGenerator;
 
 class FileComparison
 {
-    private DifferFactory $differFactory;
+    private DifferGenerator $differGenerator;
     private FileInspectorFactory $fileInspectorFactory;
 
     /**
-     * @param DifferFactory $differFactory
+     * @param DifferGenerator $differGenerator
      * @param FileInspectorFactory $fileInspectorFactory
      */
     public function __construct(
-        DifferFactory $differFactory,
+        DifferGenerator $differGenerator,
         FileInspectorFactory $fileInspectorFactory
     ) {
-        $this->differFactory = $differFactory;
+        $this->differGenerator = $differGenerator;
         $this->fileInspectorFactory = $fileInspectorFactory;
     }
 
@@ -34,7 +34,7 @@ class FileComparison
         }
 
         $differBuilderOptions = ['fromFile' => $originalFile->getRealPath(), 'toFile' => $newFile->getRealPath()];
-        $differ = $this->differFactory->create($differBuilderOptions);
+        $differ = $this->differGenerator->create($differBuilderOptions);
 
         return $differ->diff(
             $originalFile->getContents(),

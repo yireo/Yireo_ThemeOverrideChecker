@@ -9,8 +9,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
-use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
+use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
 
@@ -19,14 +20,14 @@ class DiffOverrideCommand extends Command
     private ThemeFileResolver $themeFileResolver;
     private ThemeProvider $themeProvider;
     private FileComparison $fileComparison;
-    private SplFileInfoFactory $splFileInfoFactory;
+    private SplFileInfoBuilder $splFileInfoBuilder;
     private State $appState;
 
     public function __construct(
         ThemeFileResolver $themeFileResolver,
         ThemeProvider $themeProvider,
         FileComparison $fileComparison,
-        SplFileInfoFactory $splFileInfoFactory,
+        SplFileInfoBuilder $splFileInfoBuilder,
         State $appState,
         string $name = null
     ) {
@@ -34,7 +35,7 @@ class DiffOverrideCommand extends Command
         $this->themeFileResolver = $themeFileResolver;
         $this->themeProvider = $themeProvider;
         $this->fileComparison = $fileComparison;
-        $this->splFileInfoFactory = $splFileInfoFactory;
+        $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->appState = $appState;
     }
 
@@ -54,7 +55,7 @@ class DiffOverrideCommand extends Command
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return void
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -81,7 +82,8 @@ class DiffOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        $file = $this->splFileInfoFactory->create($themePath . '/' .$fileName, $themePath);
+        /** @var SplFileInfo $file */
+        $file = $this->splFileInfoBuilder->create($themePath . '/' .$fileName, $themePath);
         if (false === $file->getRealPath()) {
             $output->writeln('<error>Unable to read file</error>');
             return Command::FAILURE;

@@ -10,10 +10,11 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\FileInspectorFactory;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
-use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
+use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
 
@@ -22,7 +23,7 @@ class ShowOverrideCommand extends Command
     private ThemeFileResolver $themeFileResolver;
     private ThemeProvider $themeProvider;
     private FileComparison $fileComparison;
-    private SplFileInfoFactory $splFileInfoFactory;
+    private SplFileInfoBuilder $splFileInfoBuilder;
     private State $appState;
     private OverrideAdviser $overrideAdviser;
     private FileInspectorFactory $fileInspectorFactory;
@@ -31,7 +32,7 @@ class ShowOverrideCommand extends Command
         ThemeFileResolver $themeFileResolver,
         ThemeProvider $themeProvider,
         FileComparison $fileComparison,
-        SplFileInfoFactory $splFileInfoFactory,
+        SplFileInfoBuilder $splFileInfoBuilder,
         State $appState,
         OverrideAdviser $overrideAdviser,
         FileInspectorFactory $fileInspectorFactory,
@@ -41,7 +42,7 @@ class ShowOverrideCommand extends Command
         $this->themeFileResolver = $themeFileResolver;
         $this->themeProvider = $themeProvider;
         $this->fileComparison = $fileComparison;
-        $this->splFileInfoFactory = $splFileInfoFactory;
+        $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->appState = $appState;
         $this->overrideAdviser = $overrideAdviser;
         $this->fileInspectorFactory = $fileInspectorFactory;
@@ -63,7 +64,7 @@ class ShowOverrideCommand extends Command
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return void
+     * @return int
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -97,7 +98,8 @@ class ShowOverrideCommand extends Command
             $parentTheme = false;
         }
 
-        $file = $this->splFileInfoFactory->create($themePath . '/' .$fileName, $themePath);
+        /** @var SplFileInfo $file */
+        $file = $this->splFileInfoBuilder->create($themePath . '/' .$fileName, $themePath);
 
         $table = new Table($output);
         $table->setHeaders([

@@ -6,22 +6,22 @@ use Magento\Framework\App\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Yireo\ThemeOverrideChecker\Util\FileInspector;
-use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
+use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 
 class FileInspectorTest extends TestCase
 {
     public function testFileInspection()
     {
         $testFile = __FILE__;
-        $splFileInfoFactory = $this->get(SplFileInfoFactory::class);
-        $fileInspector = $this->create(FileInspector::class, ['file' => $splFileInfoFactory->create($testFile)]);
+        $splFileInfoBuilder = $this->get(SplFileInfoBuilder::class);
+        $fileInspector = $this->create(FileInspector::class, ['file' => $splFileInfoBuilder->create($testFile)]);
         $this->assertInstanceOf(FileInspector::class, $fileInspector);
         $this->assertNotEmpty($fileInspector->getContents());
         $this->assertLineCountHigher(25, $fileInspector->getLineCount(), $testFile);
 
         $reflection = new ReflectionClass(FileInspector::class);
         $testFile = $reflection->getFileName();
-        $fileInspector = $this->create(FileInspector::class, ['file' => $splFileInfoFactory->create($testFile)]);
+        $fileInspector = $this->create(FileInspector::class, ['file' => $splFileInfoBuilder->create($testFile)]);
         $this->assertInstanceOf(FileInspector::class, $fileInspector);
         $this->assertNotEmpty($fileInspector->getContents());
         $this->assertLineCountHigher(30, $fileInspector->getLineCount(), $testFile);

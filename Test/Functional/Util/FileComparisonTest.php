@@ -10,7 +10,7 @@ use SebastianBergmann\Diff\Output\UnifiedDiffOutputBuilder;
 use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\FileInspector;
-use Yireo\ThemeOverrideChecker\Util\SplFileInfoFactory;
+use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 
 class FileComparisonTest extends TestCase
 {

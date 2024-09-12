@@ -36,7 +36,7 @@ AmpersandHQ developed an excellent tool [ampersand-magento2-upgrade-patch-helper
 
 ## Todo
 - Support for multiple parent themes
-- Make `contextLines` in DifferFactory configurable
+- Make `contextLines` in DifferGenerator configurable
 - Improve adviser
   - An XML layout file with dozens of line differences is ok
   - An XML override file is dangerous

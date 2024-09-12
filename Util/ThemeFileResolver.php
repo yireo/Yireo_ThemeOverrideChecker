@@ -16,7 +16,7 @@ class ThemeFileResolver
 {
     private ViewFilesystem $viewFilesystem;
     private ComponentRegistrar $componentRegistrar;
-    private SplFileInfoFactory $splFileInfoFactory;
+    private SplFileInfoBuilder $splFileInfoBuilder;
     private ThemeProvider $themeProvider;
     private array $resolverTrace = [];
     private DirectoryList $directoryList;
@@ -24,13 +24,13 @@ class ThemeFileResolver
     public function __construct(
         ViewFilesystem $viewFilesystem,
         ComponentRegistrar $componentRegistrar,
-        SplFileInfoFactory $splFileInfoFactory,
+        SplFileInfoBuilder $splFileInfoBuilder,
         ThemeProvider $themeProvider,
         DirectoryList $directoryList
     ) {
         $this->viewFilesystem = $viewFilesystem;
         $this->componentRegistrar = $componentRegistrar;
-        $this->splFileInfoFactory = $splFileInfoFactory;
+        $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->themeProvider = $themeProvider;
         $this->directoryList = $directoryList;
     }
@@ -155,6 +155,6 @@ class ThemeFileResolver
      */
     private function getSplInfoFile(string $file): SplFileInfo
     {
-        return $this->splFileInfoFactory->create($file);
+        return $this->splFileInfoBuilder->create($file);
     }
 }
