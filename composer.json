@@ -1,6 +1,6 @@
 {
     "name": "yireo/magento2-theme-override-checker",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "N/A",
     "type": "magento2-module",
     "require": {
