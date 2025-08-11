@@ -33,7 +33,7 @@ class CheckOverrideCommand extends Command
         FileComparison $fileComparison,
         State $appState,
         OverrideAdviser $overrideAdviser,
-        string $name = null
+        ?string $name = null
     ) {
         parent::__construct($name);
         $this->finder = $finder;

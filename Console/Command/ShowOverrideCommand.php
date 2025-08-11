@@ -36,7 +36,7 @@ class ShowOverrideCommand extends Command
         State $appState,
         OverrideAdviser $overrideAdviser,
         FileInspectorFactory $fileInspectorFactory,
-        string $name = null
+        ?string $name = null
     ) {
         parent::__construct($name);
         $this->themeFileResolver = $themeFileResolver;

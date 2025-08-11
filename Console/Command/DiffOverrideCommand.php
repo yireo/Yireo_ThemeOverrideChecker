@@ -29,7 +29,7 @@ class DiffOverrideCommand extends Command
         FileComparison $fileComparison,
         SplFileInfoBuilder $splFileInfoBuilder,
         State $appState,
-        string $name = null
+        ?string $name = null
     ) {
         parent::__construct($name);
         $this->themeFileResolver = $themeFileResolver;
