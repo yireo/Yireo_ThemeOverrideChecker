@@ -34,7 +34,7 @@ class FileInspector
         $contents = $this->fileStripper->strip($this->file->getFilename(), $contents);
         $lines = explode("\n", $contents);
         return array_filter($lines, function($line) {
-            $line = trim($line);
+            $line = trim($line, " \n\r\t\v\x00");
             if (empty($line)) {
                 return false;
             }
