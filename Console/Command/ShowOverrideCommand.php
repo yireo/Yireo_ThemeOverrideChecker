@@ -11,9 +11,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\SplFileInfo;
+use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\FileInspectorFactory;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
+use Yireo\ThemeOverrideChecker\Util\PathGuard;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
@@ -27,6 +29,7 @@ class ShowOverrideCommand extends Command
     private State $appState;
     private OverrideAdviser $overrideAdviser;
     private FileInspectorFactory $fileInspectorFactory;
+    private PathGuard $pathGuard;
 
     public function __construct(
         ThemeFileResolver $themeFileResolver,
@@ -36,6 +39,7 @@ class ShowOverrideCommand extends Command
         State $appState,
         OverrideAdviser $overrideAdviser,
         FileInspectorFactory $fileInspectorFactory,
+        PathGuard $pathGuard,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -46,6 +50,7 @@ class ShowOverrideCommand extends Command
         $this->appState = $appState;
         $this->overrideAdviser = $overrideAdviser;
         $this->fileInspectorFactory = $fileInspectorFactory;
+        $this->pathGuard = $pathGuard;
     }
 
     /**
@@ -96,6 +101,11 @@ class ShowOverrideCommand extends Command
             $parentTheme = $this->themeProvider->getParentThemeFromTheme($theme);
         } catch (NotFoundException $e) {
             $parentTheme = false;
+        }
+
+        if (!$this->isFileInTheme($fileName, $themePath)) {
+            $output->writeln('<error>File not found within theme</error>');
+            return Command::FAILURE;
         }
 
         /** @var SplFileInfo $file */
@@ -171,5 +181,21 @@ class ShowOverrideCommand extends Command
 
         $table->render();
         return Command::SUCCESS;
+    }
+
+    /**
+     * @param string $fileName
+     * @param string $themePath
+     * @return bool
+     */
+    private function isFileInTheme(string $fileName, string $themePath): bool
+    {
+        try {
+            $this->pathGuard->assertSafeRelativePath($fileName);
+        } catch (ThemeFileResolveException $e) {
+            return false;
+        }
+
+        return $this->pathGuard->isInside($themePath . '/' . $fileName, $themePath);
     }
 }

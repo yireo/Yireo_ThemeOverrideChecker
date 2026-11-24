@@ -10,7 +10,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\SplFileInfo;
+use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
+use Yireo\ThemeOverrideChecker\Util\PathGuard;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
 use Yireo\ThemeOverrideChecker\Util\ThemeProvider;
@@ -22,6 +24,7 @@ class DiffOverrideCommand extends Command
     private FileComparison $fileComparison;
     private SplFileInfoBuilder $splFileInfoBuilder;
     private State $appState;
+    private PathGuard $pathGuard;
 
     public function __construct(
         ThemeFileResolver $themeFileResolver,
@@ -29,6 +32,7 @@ class DiffOverrideCommand extends Command
         FileComparison $fileComparison,
         SplFileInfoBuilder $splFileInfoBuilder,
         State $appState,
+        PathGuard $pathGuard,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -37,6 +41,7 @@ class DiffOverrideCommand extends Command
         $this->fileComparison = $fileComparison;
         $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->appState = $appState;
+        $this->pathGuard = $pathGuard;
     }
 
     /**
@@ -82,12 +87,13 @@ class DiffOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        /** @var SplFileInfo $file */
-        $file = $this->splFileInfoBuilder->create($themePath . '/' .$fileName, $themePath);
-        if (false === $file->getRealPath()) {
-            $output->writeln('<error>Unable to read file</error>');
+        if (!$this->isFileInTheme($fileName, $themePath)) {
+            $output->writeln('<error>File not found within theme</error>');
             return Command::FAILURE;
         }
+
+        /** @var SplFileInfo $file */
+        $file = $this->splFileInfoBuilder->create($themePath . '/' .$fileName, $themePath);
 
         $this->appState->setAreaCode('frontend');
         $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
@@ -109,5 +115,21 @@ class DiffOverrideCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * @param string $fileName
+     * @param string $themePath
+     * @return bool
+     */
+    private function isFileInTheme(string $fileName, string $themePath): bool
+    {
+        try {
+            $this->pathGuard->assertSafeRelativePath($fileName);
+        } catch (ThemeFileResolveException $e) {
+            return false;
+        }
+
+        return $this->pathGuard->isInside($themePath . '/' . $fileName, $themePath);
     }
 }

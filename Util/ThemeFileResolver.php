@@ -20,19 +20,22 @@ class ThemeFileResolver
     private ThemeProvider $themeProvider;
     private array $resolverTrace = [];
     private DirectoryList $directoryList;
+    private PathGuard $pathGuard;
 
     public function __construct(
         ViewFilesystem $viewFilesystem,
         ComponentRegistrar $componentRegistrar,
         SplFileInfoBuilder $splFileInfoBuilder,
         ThemeProvider $themeProvider,
-        DirectoryList $directoryList
+        DirectoryList $directoryList,
+        PathGuard $pathGuard
     ) {
         $this->viewFilesystem = $viewFilesystem;
         $this->componentRegistrar = $componentRegistrar;
         $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->themeProvider = $themeProvider;
         $this->directoryList = $directoryList;
+        $this->pathGuard = $pathGuard;
     }
 
     /**
@@ -44,6 +47,7 @@ class ThemeFileResolver
     public function resolveOriginalFile(SplFileInfo $themeFile, ThemePackage $theme): SplFileInfo
     {
         $this->resolverTrace = [];
+        $this->pathGuard->assertSafeRelativePath($themeFile->getRelativePathname());
 
         try {
             return $this->resolveOriginalFileFromParentTheme($themeFile, $theme);
@@ -82,6 +86,8 @@ class ThemeFileResolver
      */
     public function resolveOriginalFileFromParentTheme(SplFileInfo $themeFile, ThemePackage $theme): SplFileInfo
     {
+        $this->pathGuard->assertSafeRelativePath($themeFile->getRelativePathname());
+
         try {
             $parentTheme = $this->themeProvider->getParentThemeFromTheme($theme);
         } catch (NotFoundException $e) {
@@ -91,7 +97,7 @@ class ThemeFileResolver
         $parentThemeFile = $parentTheme->getPath().'/'.$themeFile->getRelativePathname();
         $this->resolverTrace[] = $parentThemeFile;
 
-        if (file_exists($parentThemeFile)) {
+        if ($this->pathGuard->isInside($parentThemeFile, $parentTheme->getPath())) {
             return $this->getSplInfoFile($parentThemeFile);
         }
 
@@ -106,6 +112,7 @@ class ThemeFileResolver
     public function resolveOriginalFileFromModule(SplFileInfo $themeFile): SplFileInfo
     {
         $themeFilePath = $themeFile->getRelativePathname();
+        $this->pathGuard->assertSafeRelativePath($themeFilePath);
         if (!preg_match('#^([a-zA-Z0-9]+)_([a-zA-Z0-9]+)/(.*)#', $themeFilePath, $match)) {
             throw new ThemeFileResolveException(__('File "'.$themeFilePath.'" does not look like a module file'));
         }
@@ -115,13 +122,13 @@ class ThemeFileResolver
         $moduleFile = $modulePath.'/view/frontend/'.$match[3];
         $this->resolverTrace[] = $moduleFile;
 
-        if (file_exists($moduleFile)) {
+        if ($this->pathGuard->isInside($moduleFile, $modulePath.'/view/frontend')) {
             return $this->getSplInfoFile($moduleFile);
         }
 
         $moduleFile = $modulePath.'/view/base/'.$match[3];
         $this->resolverTrace[] = $moduleFile;
-        if (file_exists($moduleFile)) {
+        if ($this->pathGuard->isInside($moduleFile, $modulePath.'/view/base')) {
             return $this->getSplInfoFile($moduleFile);
         }
 
@@ -136,13 +143,14 @@ class ThemeFileResolver
     public function resolveOriginalFileFromLib(SplFileInfo $themeFile): SplFileInfo
     {
         $themeFilePath = $themeFile->getRelativePathname();
+        $this->pathGuard->assertSafeRelativePath($themeFilePath);
         if (false === preg_match('/^web/', $themeFilePath)) {
             throw new ThemeFileResolveException(__('File for "'.$themeFilePath.'" is not a lib file'));
         }
 
         $libFile = $this->directoryList->getRoot() . '/lib/' . $themeFilePath;
         $this->resolverTrace[] = $libFile;
-        if (file_exists($libFile)) {
+        if ($this->pathGuard->isInside($libFile, $this->directoryList->getRoot() . '/lib')) {
             return $this->getSplInfoFile($libFile);
         }
 
