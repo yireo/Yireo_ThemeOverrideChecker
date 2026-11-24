@@ -77,7 +77,13 @@ class CheckOverrideCommand extends Command
         }
 
         $this->appState->setAreaCode('frontend');
-        $theme = $this->themeProvider->getTheme($themeName);
+        try {
+            $theme = $this->themeProvider->getTheme($themeName);
+        } catch (NotFoundException $e) {
+            $output->writeln('<error>No theme found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
+
+            return Command::FAILURE;
+        }
 
         try {
             $themePath = $this->themeProvider->getThemePath($theme);

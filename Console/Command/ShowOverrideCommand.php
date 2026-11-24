@@ -91,7 +91,13 @@ class ShowOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        $theme = $this->themeProvider->getTheme($themeName);
+        try {
+            $theme = $this->themeProvider->getTheme($themeName);
+        } catch (NotFoundException $e) {
+            $output->writeln('<error>No theme found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
+
+            return Command::FAILURE;
+        }
 
         try {
             $themePath = $this->themeProvider->getThemePath($theme);
@@ -153,7 +159,16 @@ class ShowOverrideCommand extends Command
         ]);
 
         $this->appState->setAreaCode('frontend');
-        $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
+        try {
+            $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
+        } catch (ThemeFileResolveException $e) {
+            $output->writeln('<error>No original file found for "'.$this->consoleSanitizer->clean($fileName).'"</error>');
+            if ($output->isVerbose()) {
+                $output->writeln($this->consoleSanitizer->clean($e->getMessage()));
+            }
+
+            return Command::FAILURE;
+        }
         $table->addRow([
             'Original file',
             $this->consoleSanitizer->clean($parentFile->getPathname()),

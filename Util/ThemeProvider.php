@@ -31,6 +31,7 @@ class ThemeProvider
     /**
      * @param string $themeName
      * @return ThemePackage
+     * @throws NotFoundException
      */
     public function getTheme(string $themeName): ThemePackage
     {
@@ -38,7 +39,11 @@ class ThemeProvider
             $themeName = 'frontend/'.$themeName;
         }
 
-        return $this->themePackageList->getTheme($themeName);
+        try {
+            return $this->themePackageList->getTheme($themeName);
+        } catch (\UnexpectedValueException $e) {
+            throw new NotFoundException(__('Theme "%1" not found', $themeName));
+        }
     }
 
     /**

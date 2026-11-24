@@ -82,7 +82,13 @@ class DiffOverrideCommand extends Command
             return Command::FAILURE;
         }
 
-        $theme = $this->themeProvider->getTheme($themeName);
+        try {
+            $theme = $this->themeProvider->getTheme($themeName);
+        } catch (NotFoundException $e) {
+            $output->writeln('<error>No theme found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
+
+            return Command::FAILURE;
+        }
 
         try {
             $themePath = $this->themeProvider->getThemePath($theme);
@@ -100,7 +106,16 @@ class DiffOverrideCommand extends Command
         $file = $this->splFileInfoBuilder->create($themePath . '/' .$fileName, $themePath);
 
         $this->appState->setAreaCode('frontend');
-        $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
+        try {
+            $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
+        } catch (ThemeFileResolveException $e) {
+            $output->writeln('<error>No original file found for "'.$this->consoleSanitizer->clean($fileName).'"</error>');
+            if ($output->isVerbose()) {
+                $output->writeln($this->consoleSanitizer->clean($e->getMessage()));
+            }
+
+            return Command::FAILURE;
+        }
         $diff = $this->fileComparison->getDiff($file, $parentFile);
 
         $diffLines = explode("\n", $diff);

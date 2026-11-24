@@ -3,6 +3,7 @@
 namespace Yireo\ThemeOverrideChecker\Test\Unit\Console\Command;
 
 use Magento\Framework\App\State;
+use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\View\Design\Theme\ThemePackage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -10,6 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Console\Command\DiffOverrideCommand;
+use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
 use Yireo\ThemeOverrideChecker\Util\ConsoleSanitizer;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\PathGuard;
@@ -85,15 +87,46 @@ class DiffOverrideCommandTest extends TestCase
         $this->assertStringNotContainsString("\e", $display);
     }
 
+    public function testFailsGracefullyWithUnknownTheme(): void
+    {
+        $themeProvider = $this->createStub(ThemeProvider::class);
+        $themeProvider->method('getTheme')->willThrowException(new NotFoundException(__('Theme not found')));
+
+        $command = $this->getCommand($this->createStub(ThemeFileResolver::class), null, $themeProvider);
+        $commandTester = new CommandTester($command);
+        $commandTester->execute(['theme' => 'Yireo/<error>unknown', 'file' => 'templates/file.phtml']);
+
+        $this->assertSame(Command::FAILURE, $commandTester->getStatusCode());
+        $this->assertStringContainsString('No theme found for theme "Yireo/<error>unknown"', $commandTester->getDisplay());
+    }
+
+    public function testFailsGracefullyWithoutOriginalFile(): void
+    {
+        $themeFileResolver = $this->createStub(ThemeFileResolver::class);
+        $themeFileResolver->method('resolveOriginalFile')->willThrowException(
+            new ThemeFileResolveException(__('Parent theme file for "%1" not found. Tried: %2', 'x', '/var/www'))
+        );
+
+        $commandTester = new CommandTester($this->getCommand($themeFileResolver));
+        $commandTester->execute(['theme' => 'Yireo/child', 'file' => 'templates/file.phtml']);
+
+        $this->assertSame(Command::FAILURE, $commandTester->getStatusCode());
+        $this->assertStringContainsString('No original file found for "templates/file.phtml"', $commandTester->getDisplay());
+        $this->assertStringNotContainsString('/var/www', $commandTester->getDisplay());
+    }
+
     private function getCommand(
         ThemeFileResolver $themeFileResolver,
-        ?FileComparison $fileComparison = null
+        ?FileComparison $fileComparison = null,
+        ?ThemeProvider $themeProvider = null
     ): DiffOverrideCommand {
-        $themeProvider = $this->createStub(ThemeProvider::class);
-        $themeProvider->method('getTheme')->willReturn(
-            new ThemePackage('frontend/Yireo/child', $this->baseDir . '/theme')
-        );
-        $themeProvider->method('getThemePath')->willReturn($this->baseDir . '/theme');
+        if ($themeProvider === null) {
+            $themeProvider = $this->createStub(ThemeProvider::class);
+            $themeProvider->method('getTheme')->willReturn(
+                new ThemePackage('frontend/Yireo/child', $this->baseDir . '/theme')
+            );
+            $themeProvider->method('getThemePath')->willReturn($this->baseDir . '/theme');
+        }
 
         $splFileInfoBuilder = $this->createStub(SplFileInfoBuilder::class);
         $splFileInfoBuilder->method('create')->willReturnCallback(

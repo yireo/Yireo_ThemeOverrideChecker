@@ -71,9 +71,9 @@ class ThemeFileResolver
 
         throw new ThemeFileResolveException(
             __(
-                'Parent theme file for "'.$themeFile->getRelativePathname().'" not found. Tried: '
-                ."\n- "
-                .implode("\n- ", $this->resolverTrace)
+                'Parent theme file for "%1" not found. Tried: %2',
+                $themeFile->getRelativePathname(),
+                "\n- " . implode("\n- ", $this->resolverTrace)
             )
         );
     }
@@ -101,7 +101,7 @@ class ThemeFileResolver
             return $this->getSplInfoFile($parentThemeFile);
         }
 
-        throw new ThemeFileResolveException(__('Parent theme file for "'.$themeFile->getRelativePathname().'" not found'));
+        throw new ThemeFileResolveException(__('Parent theme file for "%1" not found', $themeFile->getRelativePathname()));
     }
 
     /**
@@ -114,13 +114,13 @@ class ThemeFileResolver
         $themeFilePath = $themeFile->getRelativePathname();
         $this->pathGuard->assertSafeRelativePath($themeFilePath);
         if (!preg_match('#^([a-zA-Z0-9]+)_([a-zA-Z0-9]+)/(.*)#', $themeFilePath, $match)) {
-            throw new ThemeFileResolveException(__('File "'.$themeFilePath.'" does not look like a module file'));
+            throw new ThemeFileResolveException(__('File "%1" does not look like a module file', $themeFilePath));
         }
 
         $moduleName = $match[1].'_'.$match[2];
         $modulePath = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
         if (empty($modulePath)) {
-            throw new ThemeFileResolveException(__('Module "'.$moduleName.'" is not registered'));
+            throw new ThemeFileResolveException(__('Module "%1" is not registered', $moduleName));
         }
 
         $moduleFile = $modulePath.'/view/frontend/'.$match[3];
@@ -136,7 +136,7 @@ class ThemeFileResolver
             return $this->getSplInfoFile($moduleFile);
         }
 
-        throw new ThemeFileResolveException(__('Module file for "'.$themeFilePath.'" not found'));
+        throw new ThemeFileResolveException(__('Module file for "%1" not found', $themeFilePath));
     }
 
     /**
@@ -149,7 +149,7 @@ class ThemeFileResolver
         $themeFilePath = $themeFile->getRelativePathname();
         $this->pathGuard->assertSafeRelativePath($themeFilePath);
         if (!preg_match('#^web/#', $themeFilePath)) {
-            throw new ThemeFileResolveException(__('File for "'.$themeFilePath.'" is not a lib file'));
+            throw new ThemeFileResolveException(__('File for "%1" is not a lib file', $themeFilePath));
         }
 
         $libFile = $this->directoryList->getRoot() . '/lib/' . $themeFilePath;
@@ -158,7 +158,7 @@ class ThemeFileResolver
             return $this->getSplInfoFile($libFile);
         }
 
-        throw new ThemeFileResolveException(__('File for "'.$themeFilePath.'" is not a lib file'));
+        throw new ThemeFileResolveException(__('File for "%1" is not a lib file', $themeFilePath));
     }
 
     /**
