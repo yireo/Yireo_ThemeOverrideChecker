@@ -35,7 +35,7 @@ class FileStripper
      */
     private function setStripHtmlComments(string $text): string
     {
-        return preg_replace('#<!--(.|\s)*?-->#msi', '', $text);
+        return preg_replace('#<!--.*?-->#s', '', $text) ?? $text;
     }
 
     /**
@@ -44,8 +44,8 @@ class FileStripper
      */
     private function setStripJsComments(string $text): string
     {
-        $text = preg_replace('#^//(.*)\n#', '', $text);
-        $text = preg_replace('#/\*(.*)\*/#msi', '', $text);
+        $text = preg_replace('#^//(.*)\n#', '', $text) ?? $text;
+        $text = preg_replace('#/\*(.*)\*/#msi', '', $text) ?? $text;
         return $text;
     }
 
@@ -55,8 +55,8 @@ class FileStripper
      */
     private function setStripCssComments(string $text): string
     {
-        $text = preg_replace('#^//(.*)\n#', '', $text);
-        $text = preg_replace('#/\*(.*)\*/#msi', '', $text);
+        $text = preg_replace('#^//(.*)\n#', '', $text) ?? $text;
+        $text = preg_replace('#/\*(.*)\*/#msi', '', $text) ?? $text;
         return $text;
     }
 }

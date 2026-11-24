@@ -76,6 +76,13 @@ class CheckOverrideCommand extends Command
             return Command::FAILURE;
         }
 
+        $extension = $input->getOption('extension');
+        if (!empty($extension) && !preg_match('/^[a-zA-Z0-9]{1,10}$/', (string)$extension)) {
+            $output->writeln('<error>Invalid extension, only use letters and digits (for example xml or phtml)</error>');
+
+            return Command::FAILURE;
+        }
+
         $this->appState->setAreaCode('frontend');
         try {
             $theme = $this->themeProvider->getTheme($themeName);
@@ -112,11 +119,15 @@ class CheckOverrideCommand extends Command
 
         $themeFiles = $this->finder->in($themePath)->files();
 
-        if($input->getOption('extension')) {
-            $themeFiles->name('*.' . $input->getOption('extension'));
+        if (!empty($extension)) {
+            $themeFiles->name('*.' . $extension);
         }
 
         foreach ($themeFiles as $themeFile) {
+            if ($themeFile->isLink()) {
+                continue;
+            }
+
             $parentThemeFile = null;
             $lineDiff = 0;
             $lineCountDiff = 0;
