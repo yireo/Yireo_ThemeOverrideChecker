@@ -115,10 +115,6 @@ class OverrideAdviser
             return false;
         }
 
-        if (false === preg_match('/\.(csv|xml|svg|jpg|gif|png|eot|ttf|woff|woff2)$/', $file->getFilename())) {
-            return false;
-        }
-
         return true;
     }
 

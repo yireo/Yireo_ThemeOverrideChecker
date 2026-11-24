@@ -98,6 +98,51 @@ class ThemeFileResolverTest extends TestCase
         );
     }
 
+    public function testResolveOriginalFileFromLibOnlyAcceptsWebFiles(): void
+    {
+        $this->createFile('lib/Magento_Theme/templates/a.phtml');
+
+        $this->expectException(ThemeFileResolveException::class);
+        $this->getResolver()->resolveOriginalFileFromLib($this->getThemeFile('Magento_Theme/templates/a.phtml'));
+    }
+
+    public function testResolveOriginalFileFromLib(): void
+    {
+        $resolved = $this->getResolver()->resolveOriginalFileFromLib($this->getThemeFile('web/css/a.less'));
+
+        $this->assertSame($this->rootDir . '/lib/web/css/a.less', $resolved->getPathname());
+    }
+
+    public function testResolveOriginalFileFromModuleWithUnknownModule(): void
+    {
+        $componentRegistrar = $this->createStub(ComponentRegistrar::class);
+        $componentRegistrar->method('getPath')->willReturn(null);
+        $this->componentRegistrar = $componentRegistrar;
+
+        try {
+            $this->getResolver()->resolveOriginalFile(
+                $this->getThemeFile('Unknown_Module/templates/b.phtml'),
+                $this->getTheme()
+            );
+            $this->fail('Expected ThemeFileResolveException');
+        } catch (ThemeFileResolveException $e) {
+            $this->assertStringNotContainsString("- /view/", $e->getMessage());
+        }
+    }
+
+    public function testResolveOriginalFileFromModule(): void
+    {
+        $componentRegistrar = $this->createStub(ComponentRegistrar::class);
+        $componentRegistrar->method('getPath')->willReturn($this->rootDir . '/module');
+        $this->componentRegistrar = $componentRegistrar;
+
+        $resolved = $this->getResolver()->resolveOriginalFileFromModule(
+            $this->getThemeFile('Yireo_Example/templates/b.phtml')
+        );
+
+        $this->assertSame($this->rootDir . '/module/view/frontend/templates/b.phtml', $resolved->getPathname());
+    }
+
     private function getResolver(): ThemeFileResolver
     {
         $splFileInfoBuilder = $this->createStub(SplFileInfoBuilder::class);

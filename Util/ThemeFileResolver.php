@@ -65,7 +65,7 @@ class ThemeFileResolver
         }
 
         $parentThemeFile = $this->viewFilesystem->getFilename($themeFile->getRelativePathname());
-        if ($parentThemeFile !== false && file_exists($parentThemeFile)) {
+        if (is_string($parentThemeFile) && is_file($parentThemeFile)) {
             return $this->getSplInfoFile($parentThemeFile);
         }
 
@@ -119,6 +119,10 @@ class ThemeFileResolver
 
         $moduleName = $match[1].'_'.$match[2];
         $modulePath = $this->componentRegistrar->getPath(ComponentRegistrar::MODULE, $moduleName);
+        if (empty($modulePath)) {
+            throw new ThemeFileResolveException(__('Module "'.$moduleName.'" is not registered'));
+        }
+
         $moduleFile = $modulePath.'/view/frontend/'.$match[3];
         $this->resolverTrace[] = $moduleFile;
 
@@ -144,7 +148,7 @@ class ThemeFileResolver
     {
         $themeFilePath = $themeFile->getRelativePathname();
         $this->pathGuard->assertSafeRelativePath($themeFilePath);
-        if (false === preg_match('/^web/', $themeFilePath)) {
+        if (!preg_match('#^web/#', $themeFilePath)) {
             throw new ThemeFileResolveException(__('File for "'.$themeFilePath.'" is not a lib file'));
         }
 
