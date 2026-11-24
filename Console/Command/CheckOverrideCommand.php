@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
+use Yireo\ThemeOverrideChecker\Util\ConsoleSanitizer;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
 use Yireo\ThemeOverrideChecker\Util\ThemeFileResolver;
@@ -25,6 +26,7 @@ class CheckOverrideCommand extends Command
     private FileComparison $fileComparison;
     private State $appState;
     private OverrideAdviser $overrideAdviser;
+    private ConsoleSanitizer $consoleSanitizer;
 
     public function __construct(
         Finder $finder,
@@ -33,6 +35,7 @@ class CheckOverrideCommand extends Command
         FileComparison $fileComparison,
         State $appState,
         OverrideAdviser $overrideAdviser,
+        ConsoleSanitizer $consoleSanitizer,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -42,6 +45,7 @@ class CheckOverrideCommand extends Command
         $this->fileComparison = $fileComparison;
         $this->appState = $appState;
         $this->overrideAdviser = $overrideAdviser;
+        $this->consoleSanitizer = $consoleSanitizer;
     }
 
     /**
@@ -78,15 +82,15 @@ class CheckOverrideCommand extends Command
         try {
             $themePath = $this->themeProvider->getThemePath($theme);
         } catch (NotFoundException|LocalizedException $e) {
-            $output->writeln('<error>No theme path found for theme "'.$themeName.'"</error>');
+            $output->writeln('<error>No theme path found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
 
             return Command::FAILURE;
         }
 
-        $output->writeln('Theme path found: '.$themePath);
+        $output->writeln('Theme path found: '.$this->consoleSanitizer->clean($themePath));
         try {
             $parentTheme = $this->themeProvider->getParentThemeFromTheme($theme);
-            $output->writeln('Theme parent found: '.$parentTheme->getPath());
+            $output->writeln('Theme parent found: '.$this->consoleSanitizer->clean($parentTheme->getPath()));
         } catch (NotFoundException $e) {
             $output->writeln('<error>No theme parent found</error>');
 
@@ -118,11 +122,11 @@ class CheckOverrideCommand extends Command
             } catch (ThemeFileResolveException $e) {
             }
 
-            $themeCell = $themeFile->getRelativePathname();
+            $themeCell = $this->consoleSanitizer->clean($themeFile->getRelativePathname());
 
             $parentCell = 'No parent file found';
             if ($parentThemeFile !== null) {
-                $parentCell = $parentThemeFile->getRelativePathname();
+                $parentCell = $this->consoleSanitizer->clean($parentThemeFile->getRelativePathname());
             }
 
             $adviceCell = $this->overrideAdviser->advise(

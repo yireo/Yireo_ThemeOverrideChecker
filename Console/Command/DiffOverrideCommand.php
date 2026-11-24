@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
+use Yireo\ThemeOverrideChecker\Util\ConsoleSanitizer;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\PathGuard;
 use Yireo\ThemeOverrideChecker\Util\SplFileInfoBuilder;
@@ -25,6 +26,7 @@ class DiffOverrideCommand extends Command
     private SplFileInfoBuilder $splFileInfoBuilder;
     private State $appState;
     private PathGuard $pathGuard;
+    private ConsoleSanitizer $consoleSanitizer;
 
     public function __construct(
         ThemeFileResolver $themeFileResolver,
@@ -33,6 +35,7 @@ class DiffOverrideCommand extends Command
         SplFileInfoBuilder $splFileInfoBuilder,
         State $appState,
         PathGuard $pathGuard,
+        ConsoleSanitizer $consoleSanitizer,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -42,6 +45,7 @@ class DiffOverrideCommand extends Command
         $this->splFileInfoBuilder = $splFileInfoBuilder;
         $this->appState = $appState;
         $this->pathGuard = $pathGuard;
+        $this->consoleSanitizer = $consoleSanitizer;
     }
 
     /**
@@ -83,7 +87,7 @@ class DiffOverrideCommand extends Command
         try {
             $themePath = $this->themeProvider->getThemePath($theme);
         } catch (NotFoundException|LocalizedException $e) {
-            $output->writeln('<error>No theme path found for theme "'.$themeName.'"</error>');
+            $output->writeln('<error>No theme path found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
             return Command::FAILURE;
         }
 
@@ -101,6 +105,7 @@ class DiffOverrideCommand extends Command
 
         $diffLines = explode("\n", $diff);
         foreach ($diffLines as $diffLine) {
+            $diffLine = $this->consoleSanitizer->clean($diffLine);
             if (preg_match('/^\+/', $diffLine)) {
                 $output->writeln('<info>'.$diffLine.'</info>');
                 continue;

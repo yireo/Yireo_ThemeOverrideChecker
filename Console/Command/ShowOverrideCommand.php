@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\SplFileInfo;
 use Yireo\ThemeOverrideChecker\Exception\ThemeFileResolveException;
+use Yireo\ThemeOverrideChecker\Util\ConsoleSanitizer;
 use Yireo\ThemeOverrideChecker\Util\FileComparison;
 use Yireo\ThemeOverrideChecker\Util\FileInspectorFactory;
 use Yireo\ThemeOverrideChecker\Util\OverrideAdviser;
@@ -30,6 +31,7 @@ class ShowOverrideCommand extends Command
     private OverrideAdviser $overrideAdviser;
     private FileInspectorFactory $fileInspectorFactory;
     private PathGuard $pathGuard;
+    private ConsoleSanitizer $consoleSanitizer;
 
     public function __construct(
         ThemeFileResolver $themeFileResolver,
@@ -40,6 +42,7 @@ class ShowOverrideCommand extends Command
         OverrideAdviser $overrideAdviser,
         FileInspectorFactory $fileInspectorFactory,
         PathGuard $pathGuard,
+        ConsoleSanitizer $consoleSanitizer,
         ?string $name = null
     ) {
         parent::__construct($name);
@@ -51,6 +54,7 @@ class ShowOverrideCommand extends Command
         $this->overrideAdviser = $overrideAdviser;
         $this->fileInspectorFactory = $fileInspectorFactory;
         $this->pathGuard = $pathGuard;
+        $this->consoleSanitizer = $consoleSanitizer;
     }
 
     /**
@@ -92,7 +96,7 @@ class ShowOverrideCommand extends Command
         try {
             $themePath = $this->themeProvider->getThemePath($theme);
         } catch (NotFoundException|LocalizedException $e) {
-            $output->writeln('<error>No theme path found for theme "'.$themeName.'"</error>');
+            $output->writeln('<error>No theme path found for theme "'.$this->consoleSanitizer->clean($themeName).'"</error>');
 
             return Command::FAILURE;
         }
@@ -119,17 +123,17 @@ class ShowOverrideCommand extends Command
 
         $table->addRow([
             'Theme name',
-            $themeName,
+            $this->consoleSanitizer->clean($themeName),
         ]);
 
         $table->addRow([
             'Theme path',
-            $themePath,
+            $this->consoleSanitizer->clean($themePath),
         ]);
 
         $table->addRow([
             'Theme file name',
-            !empty($file->getRealPath()) ? $file->getRealPath() : 'n/a'
+            !empty($file->getRealPath()) ? $this->consoleSanitizer->clean($file->getRealPath()) : 'n/a'
         ]);
 
         $themeFileInspector = $this->fileInspectorFactory->create(['file' => $file]);
@@ -140,19 +144,19 @@ class ShowOverrideCommand extends Command
 
         $table->addRow([
             'Parent theme name',
-            $parentTheme ? $parentTheme->getVendor() . '/' . $parentTheme->getName() : 'n/a'
+            $parentTheme ? $this->consoleSanitizer->clean($parentTheme->getVendor() . '/' . $parentTheme->getName()) : 'n/a'
         ]);
 
         $table->addRow([
             'Parent theme path',
-            $parentTheme ? $parentTheme->getPath() : 'n/a'
+            $parentTheme ? $this->consoleSanitizer->clean($parentTheme->getPath()) : 'n/a'
         ]);
 
         $this->appState->setAreaCode('frontend');
         $parentFile = $this->themeFileResolver->resolveOriginalFile($file, $theme);
         $table->addRow([
             'Original file',
-            $parentFile,
+            $this->consoleSanitizer->clean($parentFile->getPathname()),
         ]);
 
         $parentThemeFileInspector = $this->fileInspectorFactory->create(['file' => $parentFile]);
