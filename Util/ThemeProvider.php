@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yireo\ThemeOverrideChecker\Util;
 
 use DOMDocument;
+use DOMElement;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\View\Design\Theme\ThemePackage;
 use Magento\Framework\View\Design\Theme\ThemePackageList;
@@ -55,9 +56,24 @@ class ThemeProvider
     {
         $themePath = $theme->getPath();
         $themeConfigFile = $themePath.'/theme.xml';
+        if (!is_file($themeConfigFile)) {
+            throw new NotFoundException(__('Theme configuration file "%1" not found', $themeConfigFile));
+        }
+
         $dom = new DOMDocument();
-        $dom->load($themeConfigFile);
+        $useInternalErrors = libxml_use_internal_errors(true);
+        $loaded = $dom->load($themeConfigFile, LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($useInternalErrors);
+        if (!$loaded) {
+            throw new NotFoundException(__('Theme configuration file "%1" could not be parsed', $themeConfigFile));
+        }
+
         $themeNode = $dom->getElementsByTagName('theme')->item(0);
+        if (!$themeNode instanceof DOMElement) {
+            throw new NotFoundException(__('Theme configuration file "%1" has no theme node', $themeConfigFile));
+        }
+
         $themeParentNode = $themeNode->getElementsByTagName('parent')->item(0);
         if ($themeParentNode === null) {
             throw new NotFoundException(__('Theme has no parent'));
