@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 25 November 2026
+### Added
+- Support for Symfony 7 and sebastian/diff 6 and 7
+- Support for PHP 8.5
+
+### Changed
+- Dropped support for PHP 8.1, Magento framework 101/102 (EOL) and sebastian/diff 1/2 (which failed at runtime)
+
+### Fixed
+- Security: the file argument of the show and diff commands could read files outside the theme directory (like ../../app/etc/env.php), including via symlinks
+- Security: file contents, paths and the theme argument could inject console formatter tags and terminal escape sequences into the output
+- Theme files were always also looked up under lib/, and an unregistered module could resolve to an absolute /view/... path
+- Unknown themes or unresolvable files ended in uncaught exceptions that dumped absolute paths; a short error is now shown (trace with -v)
+- A missing or malformed theme.xml caused PHP warnings and a fatal error
+- An invalid --extension option was used unvalidated in the file search
+- Large HTML comments made stripping fail with a TypeError
+- PHP 8.4/8.6 deprecations for implicitly nullable parameters and trim() without explicit characters
+
 ## [0.0.5] - 12 September 2024
 ### Fixed
 - PHPStan fixes
